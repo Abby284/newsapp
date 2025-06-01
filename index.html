@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Global News Hub</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap">
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f4f8;
+      color: #333;
+    }
+
+    .header {
+      background-color: #1a1a40;
+      color: #fff;
+      text-align: center;
+      padding: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    .search-bar {
+      display: flex;
+      justify-content: center;
+      margin: 1rem auto;
+      gap: 0.5rem;
+      max-width: 800px;
+      padding: 0 1rem;
+    }
+
+    .search-bar input {
+      flex: 1;
+      padding: 0.7rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    .search-bar button {
+      padding: 0.7rem 1rem;
+      background-color: #cc2119;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .search-bar button:hover {
+      background-color: #a31a14;
+    }
+
+    .categories {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin: 1rem auto;
+    }
+
+    .categories button {
+      padding: 0.6rem 1.2rem;
+      background-color: #1a1a40;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .categories button:hover {
+      background-color: #372e8b;
+    }
+
+    .news-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem auto;
+      max-width: 1200px;
+      padding: 0 1rem;
+    }
+
+    .news-card {
+      background-color: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .news-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .news-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .news-card .content {
+      padding: 1rem;
+    }
+
+    .news-card h2 {
+      font-size: 1.2rem;
+      margin: 0 0 0.5rem;
+      color: #1a1a40;
+    }
+
+    .news-card p {
+      font-size: 0.9rem;
+      color: #555;
+      margin: 0 0 0.5rem;
+    }
+
+    .news-card a {
+      color: #cc2119;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .news-card a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Global News Hub</h1>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="search" placeholder="Search news...">
+    <button onclick="handleSearch()">Search</button>
+  </div>
+
+  <div class="categories">
+    <button onclick="filterNews('general')">General</button>
+    <button onclick="filterNews('world')">World</button>
+    <button onclick="filterNews('nation')">Nation</button>
+    <button onclick="filterNews('business')">Business</button>
+    <button onclick="filterNews('technology')">Technology</button>
+    <button onclick="filterNews('entertainment')">Entertainment</button>
+    <button onclick="filterNews('sports')">Sports</button>
+    <button onclick="filterNews('science')">Science</button>
+    <button onclick="filterNews('health')">Health</button>
+  </div>
+
+  <div class="news-container" id="news-container"></div>
+
+  <script>
+    const API_KEY = 'f8fbcc800517bdb01a841720d9730fb3';
+    const BASE_URL = 'https://gnews.io/api/v4';
+
+    async function fetchNews(query = '', topic = '') {
+      const url = `${BASE_URL}/top-headlines?lang=en&country=us${
+        query ? `&q=${query}` : ''
+      }${topic ? `&topic=${topic}` : ''}&token=${API_KEY}`;
+
+      try {
+        const response = await axios.get(url);
+        displayNews(response.data.articles);
+      } catch (error) {
+        console.error('Error fetching news:', error);
+        const newsContainer = document.getElementById('news-container');
+        newsContainer.innerHTML = '<p>Error fetching news. Please try again later.</p>';
+      }
+    }
+
+    function displayNews(articles) {
+      const newsContainer = document.getElementById('news-container');
+      newsContainer.innerHTML = '';
+
+      if (!articles || articles.length === 0) {
+        newsContainer.innerHTML = '<p>No news articles found.</p>';
+        return;
+      }
+
+      articles.forEach(article => {
+        const newsCard = document.createElement('div');
+        newsCard.className = 'news-card';
+
+        const publishDate = new Date(article.publishedAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        });
+
+        newsCard.innerHTML = `
+          <img src="${article.image || 'https://via.placeholder.com/300x200'}" alt="News Image">
+          <div class="content">
+            <h2>${article.title}</h2>
+            <p>${article.description || 'No description available.'}</p>
+            <p><strong>Published:</strong> ${publishDate}</p>
+            <p><strong>Source:</strong> ${article.source.name || 'Unknown'}</p>
+            <a href="${article.url}" target="_blank">Read More</a>
+          </div>
+        `;
+        newsContainer.appendChild(newsCard);
+      });
+    }
+
+    function handleSearch() {
+      const searchInput = document.getElementById('search').value.trim();
+      if (searchInput) {
+        fetchNews(searchInput);
+      } else {
+        alert('Please enter a search term.');
+      }
+    }
+
+    function filterNews(topic) {
+      fetchNews('', topic);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchNews(); // Load default news
+    });
+  </script>
+</body>
+</html>
